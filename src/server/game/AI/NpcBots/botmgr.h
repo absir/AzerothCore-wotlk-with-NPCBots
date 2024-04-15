@@ -137,6 +137,7 @@ class AC_GAME_API BotMgr
         static uint8 GetOwnershipExpireMode();
         static uint32 GetDesiredWanderingBotsCount();
         static uint32 GetBGTargetTeamPlayersCount(BattlegroundTypeId bgTypeId);
+        static float GetBaseScale();
         static float GetBotHKHonorRate();
         static float GetBotStatLimitDodge();
         static float GetBotStatLimitParry();

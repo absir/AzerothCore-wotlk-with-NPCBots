@@ -49,6 +49,7 @@ TODO: Move creature hooks here
 static std::list<BotMgr::delayed_teleport_callback_type> delayed_bot_teleports;
 
 //config
+float _baseScale;
 uint8 _basefollowdist;
 uint8 _maxClassNpcBots;
 uint8 _xpReductionAmount;
@@ -287,6 +288,7 @@ void BotMgr::LoadConfig(bool reload)
     _enableNpcBots                  = sConfigMgr->GetBoolDefault("NpcBot.Enable", true);
     _maxClassNpcBots                = sConfigMgr->GetIntDefault("NpcBot.MaxBotsPerClass", 1);
     _filterRaces                    = sConfigMgr->GetBoolDefault("NpcBot.Botgiver.FilterRaces", false);
+    _baseScale                      = sConfigMgr->GetFloatDefault("NpcBot.BaseScale", 1.0f);
     _basefollowdist                 = sConfigMgr->GetIntDefault("NpcBot.BaseFollowDistance", 30);
     _xpReductionAmount              = sConfigMgr->GetIntDefault("NpcBot.XpReduction.Amount", 0);
     _xpReductionStartingNumber      = sConfigMgr->GetIntDefault("NpcBot.XpReduction.StartingNumber", 2);
@@ -857,6 +859,10 @@ uint32 BotMgr::GetBGTargetTeamPlayersCount(BattlegroundTypeId bgTypeId)
         default:
             return 0;
     }
+}
+float BotMgr::GetBaseScale()
+{
+    return _baseScale;
 }
 float BotMgr::GetBotHKHonorRate()
 {

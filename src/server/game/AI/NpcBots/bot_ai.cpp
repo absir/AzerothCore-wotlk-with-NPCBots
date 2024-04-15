@@ -580,6 +580,7 @@ void bot_ai::InitUnitFlags()
 void bot_ai::ResetBotAI(uint8 resetType)
 {
     //ASSERT(me->IsInWorld());
+    me->SetObjectScale(BotMgr::GetBaseScale());
 
     _botCommandState = 0;
     _botAwaitState = BOT_AWAIT_NONE;
