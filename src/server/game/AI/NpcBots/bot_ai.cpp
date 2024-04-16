@@ -580,6 +580,8 @@ void bot_ai::InitUnitFlags()
 void bot_ai::ResetBotAI(uint8 resetType)
 {
     //ASSERT(me->IsInWorld());
+    CreatureTemplate* creatureTemplate = const_cast<CreatureTemplate*>(me->GetCreatureTemplate());
+    creatureTemplate->scale = BotMgr::GetBaseScale();
     me->SetObjectScale(BotMgr::GetBaseScale());
 
     _botCommandState = 0;
