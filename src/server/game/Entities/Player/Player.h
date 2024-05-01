@@ -1183,6 +1183,13 @@ public:
     void SetCommandStatusOn(uint32 command) { _activeCheats |= command; }
     void SetCommandStatusOff(uint32 command) { _activeCheats &= ~command; }
 
+    uint32 m_rewardState;
+    uint32 m_rewardQuestNum;
+    uint32 GetRewardState()
+    {
+        return m_rewardState;
+    }
+
     // Played Time Stuff
     time_t m_logintime;
     time_t m_Last_tick;
@@ -2999,5 +3006,7 @@ private:
 
 void AddItemsSetItem(Player* player, Item* item);
 void RemoveItemsSetItem(Player* player, ItemTemplate const* proto);
+
+void AddRewardStateToStats(Player* player, std::array<uint32, MAX_STATS>& stats);
 
 #endif

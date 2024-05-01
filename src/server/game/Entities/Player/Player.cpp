@@ -96,6 +96,54 @@
 #include "botdatamgr.h"
 //end npcbot
 
+void SendRewardStateQuest(Player* player, int type)
+{
+    if (type == 0)
+    {
+        ChatHandler(player->GetSession()).PSendSysMessage("RewardQuestNum %d", player->m_rewardQuestNum);
+    } 
+    else
+    {
+        ChatHandler(player->GetSession()).PSendSysMessage("RewardState %d", player->m_rewardState);
+    }
+}
+
+bool ReCalcRewardStateLevelInfo(Player* player)
+{
+    float RewardStateEventQuest = sWorld->getFloatConfig(CONFIG_REWARD_STATE_EVENT_QUEST);
+    if (RewardStateEventQuest >= 0)
+    {
+        uint32 rewardState = player->GetAchievementMgr()->GetCompletedAchievements().size();
+        if (RewardStateEventQuest > 0 && player->m_rewardQuestNum > 0)
+        {
+            rewardState += uint32(player->m_rewardQuestNum / RewardStateEventQuest);
+        }
+        
+        if (player->m_rewardState != rewardState)
+        {
+            player->m_rewardState = rewardState;
+            SendRewardStateQuest(player, 1);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void AddRewardStateToStats(Player* player, std::array<uint32, MAX_STATS>& stats)
+{
+    if (!player)
+        return;
+
+    uint32 m_rewardState = player->m_rewardState;
+    if (m_rewardState > 0) {
+        for (int i = STAT_STRENGTH; i < MAX_STATS; ++i)         // Stats loop (0-4)
+        {
+            stats[i] += m_rewardState;
+        }
+    }
+}
+
 enum CharacterFlags
 {
     CHARACTER_FLAG_NONE                 = 0x00000000,
@@ -481,6 +529,9 @@ void Player::CleanupsBeforeDelete(bool finalCleanup)
 
 bool Player::Create(ObjectGuid::LowType guidlow, CharacterCreateInfo* createInfo)
 {
+    m_rewardState = 0;
+    m_rewardQuestNum = 0;
+
     // FIXME: outfitId not used in player creating
     /// @todo: need more checks against packet modifications
     // should check that skin, face, hair* are valid via DBC per race/class
@@ -2538,8 +2589,15 @@ void Player::GiveXP(uint32 xp, Unit* victim, float group_rate, bool isLFGReward)
 // Current player experience not update (must be update by caller)
 void Player::GiveLevel(uint8 level)
 {
+    bool reCalc = false;
     uint8 oldLevel = GetLevel();
-    if (level == oldLevel)
+    if (level != oldLevel)
+        reCalc = true;
+
+    if (ReCalcRewardStateLevelInfo(this))
+        reCalc = true;
+
+    if (!reCalc)
         return;
 
     if (Guild* guild = GetGuild())
@@ -2550,6 +2608,8 @@ void Player::GiveLevel(uint8 level)
 
     PlayerClassLevelInfo classInfo;
     sObjectMgr->GetPlayerClassLevelInfo(getClass(), level, &classInfo);
+
+    AddRewardStateToStats(this, info.stats);
 
     WorldPackets::Misc::LevelUpInfo packet;
     packet.Level = level;
@@ -2672,6 +2732,8 @@ void Player::InitStatsForLevel(bool reapplyMods)
 
     PlayerLevelInfo info;
     sObjectMgr->GetPlayerLevelInfo(getRace(true), getClass(), GetLevel(), &info);
+
+    AddRewardStateToStats(this, info.stats);
 
     uint32 maxPlayerLevel = sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL);
     sScriptMgr->OnSetMaxLevel(this, maxPlayerLevel);

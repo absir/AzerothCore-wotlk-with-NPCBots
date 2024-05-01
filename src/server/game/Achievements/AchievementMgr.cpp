@@ -2280,6 +2280,8 @@ void AchievementMgr::CompletedAchievement(AchievementEntry const* achievement)
     UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_ACHIEVEMENT, achievement->ID);
     UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_EARN_ACHIEVEMENT_POINTS, achievement->points);
 
+    _player->GiveLevel(_player->getLevel());
+
     // reward items and titles if any
     AchievementReward const* reward = sAchievementMgr->GetAchievementReward(achievement);
 

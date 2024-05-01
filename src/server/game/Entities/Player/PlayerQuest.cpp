@@ -30,7 +30,9 @@
 #include "ScriptMgr.h"
 #include "SpellAuraEffects.h"
 #include "SpellMgr.h"
+#include "World.h"
 #include "WorldSession.h"
+#include "Logging/Log.h"
 
 /*********************************************************/
 /***                    QUEST SYSTEM                   ***/
@@ -823,9 +825,14 @@ void Player::RewardQuest(Quest const* quest, uint32 reward, Object* questGiver, 
     else if (quest->IsSeasonal())
         SetSeasonalQuestStatus(quest_id);
 
+    float RewardStateEventQuest = sWorld->getFloatConfig(CONFIG_REWARD_STATE_EVENT_QUEST);
+    uint8 rewardedQuestsSaveCount = RewardStateEventQuest > 0 ? m_RewardedQuestsSave.size() : 0;
+
     RemoveActiveQuest(quest_id, false);
     m_RewardedQuests.insert(quest_id);
     m_RewardedQuestsSave[quest_id] = true;
+
+    rewardedQuestsSaveCount = RewardStateEventQuest > 0 ? m_RewardedQuestsSave.size() - rewardedQuestsSaveCount : 0;
 
     if (announce)
         SendQuestReward(quest, XP);
@@ -880,6 +887,12 @@ void Player::RewardQuest(Quest const* quest, uint32 reward, Object* questGiver, 
     UpdateAreaDependentAuras(GetAreaId());
 
     sScriptMgr->OnPlayerCompleteQuest(this, quest);
+    
+    if (rewardedQuestsSaveCount > 0)
+    {
+        m_rewardQuestNum++;
+        GiveLevel(getLevel());
+    }
 }
 
 void Player::FailQuest(uint32 questId)

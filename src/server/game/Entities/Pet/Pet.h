@@ -162,6 +162,8 @@ protected:
     bool       m_tempspellIsPositive;
     uint32     m_tempspell;
 
+    uint32 m_rewardState;
+
 private:
     void SaveToDB(uint32, uint8, uint32) override                // override of Creature::SaveToDB     - must not be called
     {

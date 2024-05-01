@@ -4938,6 +4938,24 @@ bool Player::isBeingLoaded() const
 
 bool Player::LoadFromDB(ObjectGuid playerGuid, CharacterDatabaseQueryHolder const& holder)
 {
+    m_rewardState = 0;
+    m_rewardQuestNum = 0;
+    float RewardStateEventQuest = sWorld->getFloatConfig(CONFIG_REWARD_STATE_EVENT_QUEST);
+    if (RewardStateEventQuest >= 0)
+    {
+        m_rewardState = GetAchievementMgr()->GetCompletedAchievements().size();
+        if (RewardStateEventQuest > 0) 
+        {
+            QueryResult result = CharacterDatabase.Query("SELECT COUNT(*) FROM `character_queststatus_rewarded` WHERE `guid`={} AND active = 1", playerGuid.GetCounter());
+            if (result)
+            {
+                Field* fields = result->Fetch();
+                m_rewardQuestNum = (*fields).Get<uint32>();
+                m_rewardState += uint32(m_rewardQuestNum/RewardStateEventQuest);
+            }
+        }
+    }
+
     ////                                                     0     1        2     3     4        5      6    7      8     9    10    11         12         13           14         15         16
     //QueryResult* result = CharacterDatabase.Query("SELECT guid, account, name, race, class, gender, level, xp, money, skin, face, hairStyle, hairColor, facialStyle, bankSlots, restState, playerFlags, "
     // 17          18          19          20   21           22        23        24         25         26          27           28                 29

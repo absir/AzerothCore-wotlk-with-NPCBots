@@ -426,6 +426,8 @@ void World::LoadConfigSettings(bool reload)
         sMetric->LoadFromConfigs();
     }
 
+    _float_configs[CONFIG_REWARD_STATE_EVENT_QUEST] = sConfigMgr->GetOption<float>("Reward.State.Quest", 5.0f);
+
     // Set realm id and enable db logging
     sLog->SetRealmId(realm.Id.Realm);
 

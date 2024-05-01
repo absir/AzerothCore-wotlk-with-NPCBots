@@ -3425,6 +3425,8 @@ void bot_ai::SetStats(bool force)
             me->SetPower(POWER_MANA, me->GetMaxPower(POWER_MANA));
 
         me->ResetPlayerDamageReq();
+
+        me->SetObjectScale(BotMgr::GetBaseScale());
     }
 
     if (botPet)
@@ -3652,6 +3654,8 @@ void bot_ai::RefreshAura(uint32 spellId, int8 count, Unit* target) const
     //for (int8 i = 0; i < count; ++i)
     if (count)
         target->AddAura(spellInfo, MAX_EFFECT_MASK, target);
+
+    me->SetObjectScale(BotMgr::GetBaseScale());
 }
 
 bool bot_ai::CanBotAttack(Unit const* target, int8 byspell, bool secondary) const
@@ -13244,6 +13248,13 @@ float bot_ai::_getTotalBotStat(BotStatMods stat) const
 
     uint8 lvl = me->GetLevel();
     float fval = float(value);
+
+    Player* player = ObjectAccessor::FindPlayerByLowGUID(_ownerGuid);
+    uint32 m_rewardState = player ? player->GetRewardState() : 0;
+    if (stat == BOT_STAT_MOD_STRENGTH || stat == BOT_STAT_MOD_AGILITY || stat == BOT_STAT_MOD_STAMINA || stat == BOT_STAT_MOD_INTELLECT || stat == BOT_STAT_MOD_SPIRIT)
+    {
+        fval += m_rewardState;
+    }
 
     switch (stat)
     {

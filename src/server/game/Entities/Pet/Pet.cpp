@@ -926,7 +926,21 @@ void Pet::GivePetXP(uint32 xp)
 
 void Pet::GivePetLevel(uint8 level)
 {
-    if (!level || level == GetLevel())
+    bool reCalc = false;
+    if (level && level != GetLevel())
+        reCalc = true;
+
+    Unit* owner = GetOwner();
+    Player* player = owner && owner->GetTypeId() == TYPEID_PLAYER ? owner->ToPlayer() : nullptr;
+    if (!reCalc && player)
+    {
+        if (m_rewardState != player->GetRewardState())
+        {
+            reCalc = true;
+        }
+    }
+
+    if (!reCalc)
         return;
 
     if (getPetType() == HUNTER_PET)
@@ -936,12 +950,17 @@ void Pet::GivePetLevel(uint8 level)
     }
 
     InitStatsForLevel(level);
+    if (player)
+        m_rewardState = player->GetRewardState();
+    
     InitLevelupSpellsForLevel();
     InitTalentForLevel();
 }
 
 bool Pet::CreateBaseAtCreature(Creature* creature)
 {
+    m_rewardState = 0;
+    
     ASSERT(creature);
 
     if (!CreateBaseAtTamed(creature->GetCreatureTemplate(), creature->GetMap(), creature->GetPhaseMask()))
@@ -1034,9 +1053,11 @@ bool Guardian::InitStatsForLevel(uint8 petlevel)
 
     //Determine pet type
     PetType petType = MAX_PET_TYPE;
+    Player* player = nullptr;
     if (owner->GetTypeId() == TYPEID_PLAYER)
     {
-        sScriptMgr->OnBeforeGuardianInitStatsForLevel(owner->ToPlayer(), this, cinfo, petType);
+        player = owner->ToPlayer();
+        sScriptMgr->OnBeforeGuardianInitStatsForLevel(player, this, cinfo, petType);
 
         if (IsPet())
         {
@@ -1102,6 +1123,8 @@ bool Guardian::InitStatsForLevel(uint8 petlevel)
     PetLevelInfo const* pInfo = sObjectMgr->GetPetLevelInfo(creature_ID, petlevel);
     if (pInfo)                                      // exist in DB
     {
+        uint32 rewardState = player ? player->GetRewardState() : 0;
+
         // Default scale value of 1 to use if Pet.RankMod.Health = 0
         float factorHealth = 1;
         // If config is set to allow pets to use health modifiers, apply it to creatures with a DB entry
@@ -1124,7 +1147,7 @@ bool Guardian::InitStatsForLevel(uint8 petlevel)
             SetModifierValue(UNIT_MOD_ARMOR, BASE_VALUE, float(pInfo->armor));
 
         for (uint8 stat = 0; stat < MAX_STATS; ++stat)
-            SetCreateStat(Stats(stat), float(pInfo->stats[stat]));
+            SetCreateStat(Stats(stat), float(pInfo->stats[stat] + rewardState));
     }
     else                                            // not exist in DB, use some default fake data
     {
@@ -2411,6 +2434,8 @@ void Pet::SynchronizeLevelWithOwner()
                 GivePetLevel(owner->GetLevel());
             else if (GetLevel() + 5 < owner->GetLevel())
                 GivePetLevel(owner->GetLevel() - 5);
+            else
+                GivePetLevel(owner->GetLevel());
             break;
         default:
             break;
